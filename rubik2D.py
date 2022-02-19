@@ -12,8 +12,20 @@ from search import *
 #################
 class Rubik2D(Problem):
 
+    def __init__(self, state):
+        super(Rubik2D, self).__init__(state.grid, goal=state.answer)
+        self.state = state
+        self.action = self.actions(state)
+
     def actions(self, state):
-        pass
+        l = []
+        for i in range(state.shape[0]):
+            for j in range(1, state.shape[0]):
+                l.append(["right", i, j])
+        for i in range(state.shape[1]):
+            for j in range(1, state.shape[1]):
+                l.append(["down", i, j])
+        return l
 
     def result(self, state, action):
         #if action not in self.actions(state) :
@@ -25,7 +37,7 @@ class Rubik2D(Problem):
             return self.moveDown(state, action[1], action[2])
 
     def goal_test(self, state):
-        return state.goal == state.grid
+        return self.goal == state.grid
 
     def moveRight(self, state, row, dec):
         """
@@ -41,8 +53,8 @@ class Rubik2D(Problem):
         r = tuple(end + r)
         toMove[row] = r
         state.grid = tuple(toMove)
-        state.move += "Row #" + str(row) + " down " + str(dec)
-        return state
+        move = state.move + " Row #" + str(row) + " right " + str(dec)
+        return State(state.shape, tuple(toMove), answer=state.answer, move=move)
 
 
     def moveDown(self, state, col, dec):
@@ -65,10 +77,9 @@ class Rubik2D(Problem):
             l = list(toMove[i])
             l[col] = Col[i]
             toMove[i] = tuple(l)
-
-        state.grid = tuple(toMove)
-        state.move += "Col #" + str(col) + " down " + str(dec)
-        return state
+        move = state.move + "Col #" + str(col) + " down " + str(dec)
+        toReturn = State(state.shape, tuple(toMove), move=move)
+        return toReturn
 
 ###############
 # State class #
@@ -103,17 +114,40 @@ def read_instance_file(filepath):
 
     return (shape_x, shape_y), initial_grid, goal_grid
 
+
 def breadth_first_tree_search(problem):
-    pass
+
+    table = {problem.initial: problem}
+    q = deque()
+    q.appendleft(problem)
+    count = 1
+
+    while len(q) != 0:
+        curr = q.pop()
+
+        action = curr.action #action = liste d'action
+
+        for act in action:
+            newCurr = curr.result(curr.state, act)
+
+            if problem.goal_test(newCurr):
+                return newCurr,count, len(q)
+
+            if newCurr.grid in table:
+                pass
+            else :
+                newRub = Rubik2D(newCurr)
+                table[newCurr.grid] = newRub
+                q.appendleft(newRub)
+                count += 1
+
 if __name__ == "__main__":
     if len(sys.argv) != 2:
         print(f"Usage: ./rubik2D.py <path_to_instance_file>")
     filepath = sys.argv[1]
 
     shape, initial_grid, goal_grid = read_instance_file(filepath)
-    print(shape)
-    print(initial_grid)
-    print(goal_grid)
+
     init_state = State(shape, tuple(initial_grid), tuple(goal_grid), "Init")
     problem = Rubik2D(init_state)
 
@@ -121,15 +155,19 @@ if __name__ == "__main__":
     start_timer = time.perf_counter()
     node, nb_explored, remaining_nodes = breadth_first_tree_search(problem)
     end_timer = time.perf_counter()
+    print(node.grid)
+    print(node.move)
+    print(nb_explored)
+    print(remaining_nodes)
 
     # Example of print
-    path = node.path()
+    #path = node.path()
 
-    for n in path:
+    #for n in path:
         # assuming that the __str__ function of state outputs the correct format
-        print(n.state)
+        #print(n.state)
 
     print("* Execution time:\t", str(end_timer - start_timer))
-    print("* Path cost to goal:\t", node.depth, "moves")
+    #print("* Path cost to goal:\t", node.depth, "moves")
     print("* #Nodes explored:\t", nb_explored)
     print("* Queue size at goal:\t",  remaining_nodes)
