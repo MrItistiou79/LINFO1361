@@ -16,11 +16,59 @@ class Rubik2D(Problem):
         pass
 
     def result(self, state, action):
-        pass
+        #if action not in self.actions(state) :
+        #    print("action not valid")
+        #    return
+        if action[0] == "right":
+            return self.moveRight(state, action[1], action[2])
+        if action[0] == "down":
+            return self.moveDown(state, action[1], action[2])
 
     def goal_test(self, state):
-        pass
+        return state.goal == state.grid
 
+    def moveRight(self, state, row, dec):
+        """
+        :param state: instance à modifier
+        :param row: indice de la ligne a modifier
+        :param dec: nombre de case a decaler
+        :return: instance state modifiée
+        """
+        toMove = list(state.grid)
+        r = list(state.grid[row])
+        end = r[-dec::]
+        del r[-dec::]
+        r = tuple(end + r)
+        toMove[row] = r
+        state.grid = tuple(toMove)
+        state.move += "Row #" + str(row) + " down " + str(dec)
+        return state
+
+
+    def moveDown(self, state, col, dec):
+        """
+        :param state: instance du rubik cube
+        :param col: indice de la colonne a changer
+        :param dec: nombre de cases a decaler
+        :return: l'instance modifiee
+        """
+        toMove = list(state.grid)
+        Col = []
+        for l in toMove:
+            Col.append(l[col])
+
+        end = Col[-dec::]
+        del Col[-dec::]
+        Col = end + Col
+
+        for i in range(len(toMove)):
+            l = list(toMove[i])
+            l[col] = Col[i]
+            toMove[i] = tuple(l)
+
+        state.grid = tuple(toMove)
+        state.move += "Col #" + str(col) + " down " + str(dec)
+        return state
 
 ###############
 # State class #
@@ -28,10 +76,10 @@ class Rubik2D(Problem):
 class State:
 
     def __init__(self, shape, grid, answer=None, move="Init"):
-        self.shape = shape
+        self.shape = shape # taille de la grille
         self.answer = answer
-        self.grid = grid
-        self.move = move
+        self.grid = grid # etat
+        self.move = move # ordre des moves
 
     def __str__(self):
         s = self.move + "\n"
@@ -55,14 +103,17 @@ def read_instance_file(filepath):
 
     return (shape_x, shape_y), initial_grid, goal_grid
 
-
+def breadth_first_tree_search(problem):
+    pass
 if __name__ == "__main__":
     if len(sys.argv) != 2:
         print(f"Usage: ./rubik2D.py <path_to_instance_file>")
     filepath = sys.argv[1]
 
     shape, initial_grid, goal_grid = read_instance_file(filepath)
-
+    print(shape)
+    print(initial_grid)
+    print(goal_grid)
     init_state = State(shape, tuple(initial_grid), tuple(goal_grid), "Init")
     problem = Rubik2D(init_state)
 
